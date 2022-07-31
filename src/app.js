@@ -110,7 +110,7 @@ io.on('connection', (socket) => {
 		let currentFen = game.fen()
 
 		// If correct move, then toggle the turns
-		if (move != null && 'captured' in move) {
+		if (move != null && 'captured' in move && move.piece != 'p') {
 			console.log("Do you want to go back to ", source, " ?")
 			io.to(room).emit('DisplayBoard', game.fen(), undefined)
 			io.to(room).emit('askMoveBack', move.color, move, room, currentFen)
