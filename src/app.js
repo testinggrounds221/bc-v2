@@ -112,7 +112,9 @@ io.on('connection', (socket) => {
 		// If correct move, then toggle the turns
 		if (move != null && 'captured' in move) {
 			console.log("Do you want to go back to ", source, " ?")
+			io.to(room).emit('DisplayBoard', game.fen(), undefined)
 			io.to(room).emit('askMoveBack', move.color, move, room, currentFen)
+
 		} else {
 			if (move != null) {
 				io.to(room).emit('Dragging', socket.id)

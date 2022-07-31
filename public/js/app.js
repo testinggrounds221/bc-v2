@@ -2,15 +2,13 @@ const formEl = document.querySelectorAll('#joinForm > div > input')
 const joinButtonEl = document.querySelector('#joinButton')
 const messageEl = document.querySelector('#message')
 const statusEl = document.querySelector('#status')
-const ChatEl = document.querySelector('#chat')
-const sendButtonEl = document.querySelector('#send')
 const roomsListEl = document.getElementById('roomsList');
 const myAudioEl = document.getElementById('myAudio');
 const singlePlayerEl = document.getElementById('singlePlayer');
 const multiPlayerEl = document.getElementById('multiPlayer');
 const totalRoomsEl = document.getElementById('rooms')
 const totalPlayersEl = document.getElementById('players')
-const chatContentEl = document.getElementById('chatContent')
+
 var config = {};
 var board = null;
 var game = new Chess()
@@ -114,8 +112,7 @@ function onDrop(source, target) {
 //Update Status Event
 socket.on('updateEvent', ({ status, fen, pgn }) => {
 	statusEl.textContent = status
-	fenEl.textContent = fen
-	pgnEl.textContent = pgn
+
 })
 
 socket.on('printing', (fen) => {
@@ -133,7 +130,7 @@ socket.on('DisplayBoard', (fenString, userId) => {
 		}
 		document.getElementById('joinFormDiv').style.display = "none";
 		document.querySelector('#chessGame').style.display = null
-		ChatEl.style.display = null
+		// ChatEl.style.display = null
 		document.getElementById('statusPGN').style.display = null
 	}
 
@@ -206,29 +203,6 @@ socket.on('disconnectedStatus', () => {
 })
 
 //Receiving a message
-socket.on('receiveMessage', (user, message) => {
-	var chatContentEl = document.getElementById('chatContent')
-	//Create a div element for using bootstrap
-	chatContentEl.scrollTop = chatContentEl.scrollHeight;
-	var divEl = document.createElement('div')
-	if (formEl[0].value == user) {
-		divEl.classList.add('myMessage');
-		divEl.textContent = message;
-	}
-	else {
-		divEl.classList.add('youMessage');
-		divEl.textContent = message;
-		document.getElementById('messageTone').play();
-	}
-	var style = window.getComputedStyle(document.getElementById('chatBox'));
-	if (style.display === 'none') {
-		document.getElementById('chatBox').style.display = 'block';
-	}
-	chatContentEl.appendChild(divEl);
-	divEl.focus();
-	divEl.scrollIntoView();
-
-})
 
 //Rooms List update
 socket.on('roomsList', (rooms) => {
@@ -256,15 +230,7 @@ socket.on('updateTotalUsers', totalUsers => {
 })
 
 //Message will be sent only after you click the button
-sendButtonEl.addEventListener('click', (e) => {
-	e.preventDefault()
-	var message = document.querySelector('#inputMessage').value
-	var user = formEl[0].value
-	var room = formEl[1].value
-	document.querySelector('#inputMessage').value = ''
-	document.querySelector('#inputMessage').focus()
-	socket.emit('sendMessage', { user, room, message })
-})
+
 
 //Connect clients only after they click Join
 joinButtonEl.addEventListener('click', (e) => {
@@ -308,76 +274,8 @@ multiPlayerEl.addEventListener('click', (e) => {
 	}
 })
 
-const applyColorScheme = (black, white) => {
-	const blackEl = document.querySelectorAll('.black-3c85d');
-	for (var i = 0; i < blackEl.length; i++) {
-		blackEl[i].style.backgroundColor = black;
-		blackEl[i].style.color = white;
-	}
-	const whiteEl = document.querySelectorAll('.white-1e1d7');
-	for (var i = 0; i < whiteEl.length; i++) {
-		whiteEl[i].style.backgroundColor = white;
-		whiteEl[i].style.color = black;
-	}
-}
 
 //For removing class from all buttons
-const removeClass = () => {
-	const buttonEl = document.querySelectorAll('.color_b');
-	for (var i = 0; i < buttonEl.length; i++) {
-		buttonEl[i].classList.remove('black');
-		buttonEl[i].classList.remove('grey');
-	}
-}
+
 
 // Color Buttons
-document.getElementById('grey_board').addEventListener('click', e => {
-	e.preventDefault();
-	removeClass();
-	document.getElementById('grey_board').classList.add('black');
-	document.getElementById('orange_board').classList.add('grey');
-	document.getElementById('green_board').classList.add('grey');
-	document.getElementById('blue_board').classList.add('grey');
-	applyColorScheme("#E1E1E1", "#FFFFFF");
-})
-
-document.getElementById('orange_board').addEventListener('click', e => {
-	e.preventDefault();
-	removeClass();
-	document.getElementById('grey_board').classList.add('grey');
-	document.getElementById('orange_board').classList.add('black');
-	document.getElementById('green_board').classList.add('grey');
-	document.getElementById('blue_board').classList.add('grey');
-	applyColorScheme("#D18B47", "#FFCE9E");
-})
-
-document.getElementById('green_board').addEventListener('click', e => {
-	e.preventDefault();
-	removeClass();
-	document.getElementById('grey_board').classList.add('grey');
-	document.getElementById('orange_board').classList.add('grey');
-	document.getElementById('green_board').classList.add('black');
-	document.getElementById('blue_board').classList.add('grey');
-	applyColorScheme("#58AC8A", "#FFFFFF");
-})
-
-document.getElementById('blue_board').addEventListener('click', e => {
-	e.preventDefault();
-	removeClass();
-	document.getElementById('grey_board').classList.add('grey');
-	document.getElementById('orange_board').classList.add('grey');
-	document.getElementById('green_board').classList.add('grey');
-	document.getElementById('blue_board').classList.add('black');
-	applyColorScheme("#727FA2", "#C3C6BE");
-})
-
-// Messages Modal
-document.getElementById('messageBox').addEventListener('click', e => {
-	e.preventDefault();
-	var style = window.getComputedStyle(document.getElementById('chatBox'));
-	if (style.display === 'none') {
-		document.getElementById('chatBox').style.display = 'block';
-	} else {
-		document.getElementById('chatBox').style.display = 'none';
-	}
-})
