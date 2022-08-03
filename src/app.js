@@ -132,6 +132,10 @@ io.on('connection', (socket) => {
 			game.load(currFen)
 			game.put({ type: move.piece, color: move.color }, move.from)
 			game.remove(move.to)
+			if (game.in_check()) {
+				io.to(room).emit('cantMoveBack', socket.id)
+				game.load(currFen)
+			}
 		}
 		io.to(room).emit('DisplayBoard', game.fen(), undefined)
 		updateStatus(game, room)

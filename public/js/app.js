@@ -160,6 +160,10 @@ socket.on('askMoveBack', (color, move, room, currFen) => {
 	//This is to be done initially only
 })
 
+socket.on('cantMoveBack', () => {
+	alert("Cant Move back as it leads to Check")
+})
+
 //To Update Status Element
 socket.on('updateStatus', (turn) => {
 	if (board.orientation().includes(turn)) {
