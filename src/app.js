@@ -132,7 +132,14 @@ io.on('connection', (socket) => {
 			game.load(currFen)
 			game.put({ type: move.piece, color: move.color }, move.from)
 			game.remove(move.to)
+
+
+			console.log(game.in_check())
 			if (game.in_check()) {
+				// game.turn() !== move.color
+				console.log(game.in_check())
+				console.log(game.turn())
+				console.log(move.color)
 				io.to(room).emit('cantMoveBack', socket.id)
 				game.load(currFen)
 			}

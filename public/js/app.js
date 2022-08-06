@@ -9,11 +9,20 @@ const singlePlayerEl = document.getElementById('singlePlayer');
 const multiPlayerEl = document.getElementById('multiPlayer');
 const totalRoomsEl = document.getElementById('rooms')
 const totalPlayersEl = document.getElementById('players')
-
+const ChatEl = document.querySelector('#chat')
+const sendButtonEl = document.querySelector('#send')
+const chatContentEl = document.getElementById('chatContent')
 var config = {};
 var board = null;
 var game = new Chess()
 var turnt = 0;
+
+var time_in_minutes = 30;
+var current_time = null;
+var deadline = null;
+var paused = false;
+var time_left;
+var timeinterval;
 
 // initializing semantic UI dropdown
 $('.ui.dropdown')
@@ -105,8 +114,10 @@ const socket = io()
 //Triggers after a piece is dropped on the board
 function onDrop(source, target) {
 	//emits event after piece is dropped
+	pause_clock();
 	var room = formEl[1].value;
 	myAudioEl.play();
+	// isMyTurn(false)
 	socket.emit('Dropped', { source, target, room })
 }
 
@@ -125,18 +136,26 @@ socket.on('DisplayBoard', (fenString, userId) => {
 	// console.log(fenString)
 	//This is to be done initially only
 	if (userId != undefined) {
+		current_time = Date.parse(new Date());
+		deadline = new Date(current_time + time_in_minutes * 60 * 1000);
 		messageEl.textContent = 'Match Started!! Best of Luck...'
 		if (socket.id == userId) {
 			config.orientation = 'black'
+			run_clock('clck', deadline);
+			pause_clock()
+		} else {
+			run_clock('clck', deadline);
 		}
 		document.getElementById('joinFormDiv').style.display = "none";
 		document.querySelector('#chessGame').style.display = null
-		// ChatEl.style.display = null
+		ChatEl.style.display = null
 		document.getElementById('statusPGN').style.display = null
 	}
 
+
 	config.position = fenString
 	board = ChessBoard('myBoard', config)
+	// console.log(turnt)
 	// document.getElementById('pgn').textContent = pgn
 })
 
@@ -151,9 +170,12 @@ socket.on('Dragging', id => {
 
 socket.on('askMoveBack', (color, move, room, currFen) => {
 	// console.log("IM", config.orientation[0])
+
+
 	if (color == config.orientation[0]) {
 		if (confirm("Do you want to move back ?")) {
 			socket.emit('replyFromMoveBack', true, move, room, currFen)
+
 		} else {
 			socket.emit('replyFromMoveBack', false, move, room, currFen) // here currFen not used
 		}
@@ -169,9 +191,11 @@ socket.on('cantMoveBack', () => {
 socket.on('updateStatus', (turn) => {
 	if (board.orientation().includes(turn)) {
 		statusEl.textContent = "Your turn"
+		resume_clock()
 	}
 	else {
 		statusEl.textContent = "Opponent's turn"
+		pause_clock()
 	}
 })
 
@@ -208,7 +232,28 @@ socket.on('disconnectedStatus', () => {
 })
 
 //Receiving a message
-
+socket.on('receiveMessage', (user, message) => {
+	var chatContentEl = document.getElementById('chatContent')
+	//Create a div element for using bootstrap
+	chatContentEl.scrollTop = chatContentEl.scrollHeight;
+	var divEl = document.createElement('div')
+	if (formEl[0].value == user) {
+		divEl.classList.add('myMessage');
+		divEl.textContent = message;
+	}
+	else {
+		divEl.classList.add('youMessage');
+		divEl.textContent = message;
+		document.getElementById('messageTone').play();
+	}
+	var style = window.getComputedStyle(document.getElementById('chatBox'));
+	if (style.display === 'none') {
+		document.getElementById('chatBox').style.display = 'block';
+	}
+	chatContentEl.appendChild(divEl);
+	divEl.focus();
+	divEl.scrollIntoView();
+})
 //Rooms List update
 socket.on('roomsList', (rooms) => {
 	// roomsListEl.innerHTML = null;
@@ -235,7 +280,15 @@ socket.on('updateTotalUsers', totalUsers => {
 })
 
 //Message will be sent only after you click the button
-
+sendButtonEl.addEventListener('click', (e) => {
+	e.preventDefault()
+	var message = document.querySelector('#inputMessage').value
+	var user = formEl[0].value
+	var room = formEl[1].value
+	document.querySelector('#inputMessage').value = ''
+	document.querySelector('#inputMessage').focus()
+	socket.emit('sendMessage', { user, room, message })
+})
 
 //Connect clients only after they click Join
 joinButtonEl.addEventListener('click', (e) => {
@@ -279,8 +332,52 @@ multiPlayerEl.addEventListener('click', (e) => {
 	}
 })
 
+function time_remaining(endtime) {
+	var t = Date.parse(endtime) - Date.parse(new Date());
+	var seconds = Math.floor((t / 1000) % 60);
+	var minutes = Math.floor((t / 1000 / 60) % 60);
+	var hours = Math.floor((t / (1000 * 60 * 60)) % 24);
+	var days = Math.floor(t / (1000 * 60 * 60 * 24));
+	return { 'total': t, 'days': days, 'hours': hours, 'minutes': minutes, 'seconds': seconds };
+}
+
+function run_clock(id, endtime) {
+	var clock = document.getElementById(id);
+	function update_clock() {
+		var t = time_remaining(endtime);
+		clock.innerHTML = t.minutes + ' : ' + t.seconds;
+		if (t.total <= 0) { clearInterval(timeinterval); }
+	}
+	update_clock(); // run function once at first to avoid delay
+	timeinterval = setInterval(update_clock, 1000);
+}
+
+function pause_clock() {
+	if (!paused) {
+		paused = true;
+		clearInterval(timeinterval); // stop the clock
+		time_left = time_remaining(deadline).total; // preserve remaining time
+	}
+}
+
+function resume_clock() {
+	if (paused) {
+		paused = false;
+		deadline = new Date(Date.parse(new Date()) + time_left);
+		run_clock('clck', deadline);
+	}
+}
 
 //For removing class from all buttons
 
 
 // Color Buttons
+document.getElementById('messageBox').addEventListener('click', e => {
+	e.preventDefault();
+	var style = window.getComputedStyle(document.getElementById('chatBox'));
+	if (style.display === 'none') {
+		document.getElementById('chatBox').style.display = 'block';
+	} else {
+		document.getElementById('chatBox').style.display = 'none';
+	}
+})

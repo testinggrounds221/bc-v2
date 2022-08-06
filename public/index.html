@@ -13,7 +13,10 @@
       <source src="./mp3/soundMove.mp3" type="audio/mpeg" />
       Your browser does not support the audio element.
     </audio>
-
+    <audio id="messageTone">
+      <source src="./mp3/insight.mp3" type="audio/mpeg" />
+      Your browser does not support the audio element.
+    </audio>
     <!-- Navbar -->
     <div>
       <div
@@ -170,6 +173,10 @@
               margin-bottom: 10px;
             "
           ></div>
+          <div
+            style="text-align: center; margin-bottom: 20px; margin-top: 5px"
+            id="clck"
+          ></div>
           <div style="text-align: center; margin-bottom: 20px">
             <a href="/" class="ui button black" style="width: 569px"
               >Leave Game</a
@@ -191,18 +198,65 @@
               Start Play
             </button>
             <button class="game ui black button" id="arrange">Arrange</button>
-            <button class="game ui black button" id="clearEditor">
+            <button
+              class="game ui black button"
+              id="clearEditor"
+              style="display: none"
+            >
               Clear Board
             </button>
-            <button class="game ui black button" id="startEditor">
+            <!-- <button class="game ui black button" id="startEditor">
               Start Board
-            </button>
+            </button> -->
           </div>
         </div>
       </div>
     </div>
 
     <!-- Chatting window -->
+    <div
+      id="chat"
+      style="
+        background-color: white;
+        display: none;
+        text-align: right;
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        width: 400px;
+        margin-right: 10px;
+        border: 2px solid black;
+      "
+    >
+      <div
+        class="ui button grey"
+        style="border-radius: 0; width: 100%; padding: 15px; font-size: 16px"
+        id="messageBox"
+      >
+        Messages
+      </div>
+      <div id="chatBox" style="display: none; padding: 12px">
+        <div
+          id="chatContent"
+          style="height: 240px; overflow-y: auto; word-break: break-all"
+        >
+          <!-- <div class="myMessage">Hello</div>
+                <div class="youMessage">his</div> -->
+        </div>
+        <form style="margin-bottom: 0" class="ui form">
+          <div style="display: flex; justify-content: space-around">
+            <input
+              class="form-control"
+              id="inputMessage"
+              type="text"
+              placeholder="Send a Message"
+              style="margin-right: 10px"
+            />
+            <button class="ui black button" id="send">Send</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <script
       src="https://code.jquery.com/jquery-3.1.1.min.js"
