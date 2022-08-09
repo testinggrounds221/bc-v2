@@ -58,10 +58,8 @@ arrangeEl.addEventListener('click', (e) => {
 	startPlayEl.style.display = null;
 	arrangeEl.style.display = "none";
 	clearEditorEl.style.display = null;
-	// let currentFen = editorBoard.fen();
-	let currentFen = "3q4/8/3p3Q/8/k7/8/8/3K4 w - - 0 1";
-
-
+	let currentFen = editorBoard.fen();
+	// let currentFen = "3q4/1N6/3p3Q/1k6/8/8/8/3K4 w - - 0 3";
 
 	configEditor = {
 		draggable: true,
@@ -136,6 +134,8 @@ function onDropEditor(source, target) {
 		to: target,
 		promotion: 'q' // NOTE: always promote to a queen for example simplicity
 	})
+	document.getElementById('trn').style.display = null;
+
 	document.getElementById('trn').innerHTML = editorGame.turn();
 
 	myAudioEl.play();
@@ -149,6 +149,14 @@ function onDropEditor(source, target) {
 			editorGame.load(currentFen)
 			editorGame.put({ type: move.piece, color: move.color }, move.from)
 			editorGame.remove(move.to)
+			if (!editorGame.fen().includes("k")) {
+				editorGame.put({ type: 'k', color: 'b' }, move.from)
+			}
+			if (!editorGame.fen().includes("K")) {
+
+				editorGame.put({ type: 'k', color: 'w' }, move.from)
+			}
+
 			let isCheck = null
 			if (editorGame.turn() === 'w') {
 				isCheck = editorGame.fen().replace('w', 'b')
@@ -158,6 +166,7 @@ function onDropEditor(source, target) {
 			}
 			let tempG = new Chess()
 			console.log("Is valid fen", tempG.load(isCheck))
+
 			if (tempG.in_check()) {
 				alert("Cant Move back as it leads to Check")
 				editorGame.load(currentFen)
