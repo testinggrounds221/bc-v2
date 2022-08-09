@@ -14,6 +14,7 @@ var editorGame = new Chess()
 
 startPlayEl.addEventListener('click', (e) => {
 	e.preventDefault();
+	document.getElementById('trn').innerHTML = editorGame.turn();
 
 	// clearEditorEl.style.display = null; // changed Here
 
@@ -57,7 +58,9 @@ arrangeEl.addEventListener('click', (e) => {
 	startPlayEl.style.display = null;
 	arrangeEl.style.display = "none";
 	clearEditorEl.style.display = null;
-	let currentFen = editorBoard.fen();
+	// let currentFen = editorBoard.fen();
+	let currentFen = "3q4/8/3p3Q/8/k7/8/8/3K4 w - - 0 1";
+
 
 
 	configEditor = {
@@ -103,7 +106,7 @@ boardEditorEl.addEventListener('click', (e) => {
 function onSnapEndEditor(params) {
 	editorBoard.position(editorGame.fen())
 
-	console.log(params)
+	console.log("here", params)
 }
 
 function onDragStartEditor(source, piece, position, orientation) {
@@ -133,11 +136,12 @@ function onDropEditor(source, target) {
 		to: target,
 		promotion: 'q' // NOTE: always promote to a queen for example simplicity
 	})
-
+	document.getElementById('trn').innerHTML = editorGame.turn();
 
 	myAudioEl.play();
 	// illegal move
 	if (move === null) return 'snapback'
+
 	let currentFen = editorGame.fen()
 	if (move != null && 'captured' in move && move.piece != 'p') {
 		if (confirm("Do you want to move back ?")) {
@@ -145,9 +149,19 @@ function onDropEditor(source, target) {
 			editorGame.load(currentFen)
 			editorGame.put({ type: move.piece, color: move.color }, move.from)
 			editorGame.remove(move.to)
-			if (editorGame.in_check()) {
+			let isCheck = null
+			if (editorGame.turn() === 'w') {
+				isCheck = editorGame.fen().replace('w', 'b')
+			}
+			if (editorGame.turn() === 'b') {
+				isCheck = editorGame.fen().replace('b', 'w')
+			}
+			let tempG = new Chess()
+			console.log("Is valid fen", tempG.load(isCheck))
+			if (tempG.in_check()) {
 				alert("Cant Move back as it leads to Check")
 				editorGame.load(currentFen)
+				editorBoard.position(editorGame.fen())
 			}
 		}
 	}
