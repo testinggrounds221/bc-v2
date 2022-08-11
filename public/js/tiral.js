@@ -1,62 +1,86 @@
-var onDrop = function (source, target) {
-	move_cfg = {
+
+// https://github.com/jhlywa/chess.js
+
+var board = null
+var boardJqry = $('#boardEditor')
+var editorGame = new Chess()
+var squareToHighlight = null
+var squareClass = 'square-55d63'
+
+function removeHighlights(color) {
+	boardJqry.find('.' + squareClass)
+		.removeClass('highlight-' + color)
+}
+
+function onDragStart(source, piece, position, orientation) {
+	// do not pick up pieces if the editorGame is over
+	if (editorGame.game_over()) return false
+
+	// only pick up pieces for White
+	if (piece.search(/^b/) !== -1) return false
+}
+
+function makeRandomMove() {
+	var possibleMoves = editorGame.moves({
+		verbose: true
+	})
+
+	// editorGame over
+	if (possibleMoves.length === 0) return
+
+	var randomIdx = Math.floor(Math.random() * possibleMoves.length)
+	var move = possibleMoves[randomIdx]
+	editorGame.move(move.san)
+
+	// highlight black's move
+	removeHighlights('white')
+	removeHighlights('black')
+	boardJqry.find('.square-' + move.from).addClass('highlight-black')
+	squareToHighlight = move.to
+
+	// update the board to the new position
+	board.position(editorGame.fen())
+}
+
+function onDrop(source, target) {
+	// see if the move is legal
+	var move = editorGame.move({
 		from: source,
 		to: target,
-		promotion: "q",
-	};
+		promotion: 'q' // NOTE: always promote to a queen for example simplicity
+	})
 
-	// check we are not trying to make an illegal pawn move to the 8th or 1st rank,
-	// so the promotion dialog doesn't pop up unnecessarily
-	// e.g. (p)d7-f8
-	var move = editorGame.move(move_cfg);
 	// illegal move
-	if (move === null) {
-		return "snapback";
-	} else {
-		editorGame.undo(); //move is ok, now we can go ahead and check for promotion
-	}
+	if (move === null) return 'snapback'
 
-	// is it a promotion?
-	var source_rank = source.substring(2, 1);
-	var target_rank = target.substring(2, 1);
-	var piece = editorGame.get(source).type;
+	// highlight white's move
+	removeHighlights('white')
+	removeHighlights('black')
 
-	if (
-		piece === "p" &&
-		((source_rank === "7" && target_rank === "8") ||
-			(source_rank === "2" && target_rank === "1"))
-	) {
-		promoting = true;
+	boardJqry.find('.square-' + source).addClass('highlight-white')
+	boardJqry.find('.square-' + target).addClass('highlight-white')
 
-		// get piece images
-		$(".promotion-piece-q").attr("src", getImgSrc("q"));
-		$(".promotion-piece-r").attr("src", getImgSrc("r"));
-		$(".promotion-piece-n").attr("src", getImgSrc("n"));
-		$(".promotion-piece-b").attr("src", getImgSrc("b"));
+	// make random move for black
+	window.setTimeout(makeRandomMove, 250)
+}
 
-		//show the select piece to promote to dialog
-		promotion_dialog
-			.dialog({
-				modal: true,
-				height: 52,
-				width: 184,
-				resizable: true,
-				draggable: false,
-				close: onDialogClose,
-				closeOnEscape: false,
-				dialogClass: "noTitleStuff",
-			})
-			.dialog("widget")
-			.position({
-				of: $("#board"),
-				my: "middle middle",
-				at: "middle middle",
-			});
-		//the actual move is made after the piece to promote to
-		//has been selected, in the stop event of the promotion piece selectable
-		return;
-	}
+function onMoveEnd() {
+	boardJqry.find('.square-' + squareToHighlight)
+		.addClass('highlight-black')
+}
 
-	// no promotion, go ahead and move
-	makeMove(editorGame, move_cfg);
-};
+// update the board position after the piece snap
+// for castling, en passant, pawn promotion
+function onSnapEnd() {
+	board.position(editorGame.fen())
+}
+
+var config = {
+	draggable: true,
+	position: 'start',
+	onDragStart: onDragStart,
+	onDrop: onDrop,
+	onMoveEnd: onMoveEnd,
+	onSnapEnd: onSnapEnd
+}
+board = Chessboard('boardEditor', config)

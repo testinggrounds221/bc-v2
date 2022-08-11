@@ -4,6 +4,22 @@ html {
 	height: 100%;
 }
 
+/* .highlight-white {
+	box-shadow: inset 0 0 3px 3px yellow;
+}
+
+.highlight-black {
+	box-shadow: inset 0 0 3px 3px blue;
+} */
+
+.highlight-white {
+	box-shadow: inset 0 0 3px 3px yellow;
+}
+
+.highlight-black {
+	box-shadow: inset 0 0 3px 3px blue;
+}
+
 #promotion-dialog {
 	display: none;
 }

@@ -9,12 +9,15 @@ var editorTurnt = 0;
 let play = true;
 var configEditor = {};
 var editorBoard = null;
+var boardJqry = $('#boardEditor')
 var editorGame = new Chess()
 var fen, editorGame, piece_theme, promote_to, promoting, promotion_dialog;
 promotion_dialog = $("#promotion-dialog");
 promoting = false;
 piece_theme = "img/chesspieces/wikipedia/{piece}.png";
 
+var squareToHighlight = null
+var squareClass = 'square-55d63'
 
 
 startPlayEl.addEventListener('click', (e) => {
@@ -47,6 +50,7 @@ startPlayEl.addEventListener('click', (e) => {
 		onSnapEnd: onSnapEndEditor,
 		onDragStart: onDragStartEditor,
 		onDrop: onDropEditor,
+		onMoveEnd: onMoveEnd,
 	}
 	editorBoard = Chessboard('boardEditor', configEditor);
 
@@ -81,14 +85,14 @@ boardEditorEl.addEventListener('click', (e) => {
 	document.getElementById('gameMode').style.display = "none";
 	document.querySelector('#boardEditorGame').style.display = null;
 	// document.querySelector('#clearEditor').style.display = "none";
-	// document.querySelector('#startEditor').style.display = "none";
+	// document.querySelector('#startEditor').style.display = "none";	
 	configEditor = {
 		draggable: true,
 		position: 'start',
 		onSnapEnd: onSnapEndEditor,
 		onDragStart: onDragStartEditor,
 		onDrop: onDropEditor,
-		dropOffBoard: 'trash',
+		onMoveEnd: onMoveEnd,
 	}
 	editorBoard = Chessboard('boardEditor', configEditor);
 })
@@ -156,6 +160,7 @@ function onDropEditor(source, target) {
 	if (move === null) {
 		return 'snapback'
 	}
+
 	let currentFen = editorGame.fen()
 	if (move != null && 'captured' in move && move.piece != 'p') {
 
@@ -166,10 +171,13 @@ function onDropEditor(source, target) {
 			editorGame.remove(move.to)
 			if (!editorGame.fen().includes("k")) {
 				editorGame.put({ type: 'k', color: 'b' }, move.from)
+				console.log(editorGame.fen().includes("k"))
+				console.log(editorGame.fen())
+
 			}
 			if (!editorGame.fen().includes("K")) {
-
 				editorGame.put({ type: 'k', color: 'w' }, move.from)
+				console.log(editorGame.fen().includes("K"))
 			}
 
 			let isCheck = null
@@ -245,9 +253,25 @@ function onDropEditor(source, target) {
 			promotion: 'q' // NOTE: always promote to a queen for example simplicity
 		})
 	}
+	if (editorGame.turn() === "b") {
+		removeHighlights('white')
+		removeHighlights('black')
+		boardJqry.find('.square-' + source).addClass('highlight-white')
+		boardJqry.find('.square-' + target).addClass('highlight-white')
+	} else {
+		removeHighlights('white')
+		removeHighlights('black')
+		boardJqry.find('.square-' + source).addClass('highlight-black')
+		boardJqry.find('.square-' + target).addClass('highlight-black')
+		// squareToHighlight = move.to
+	}
+
+
 	// no promotion, go ahead and move
 
 	editorTurnt = 1 - editorTurnt;
+
+
 	// make random legal move for black
 	// window.setTimeout(makeRandomMoveEditor, 250)
 }
@@ -304,6 +328,16 @@ function makeMove(editorGame, cfg) {
 	var move = editorGame.move(cfg);
 	// illegal move
 	if (move === null) return "snapback";
+}
+
+function removeHighlights(color) {
+	boardJqry.find('.' + squareClass)
+		.removeClass('highlight-' + color)
+}
+
+function onMoveEnd() {
+	boardJqry.find('.square-' + squareToHighlight)
+		.addClass('highlight-black')
 }
 
 window.pd = promotion_dialog
