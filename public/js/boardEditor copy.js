@@ -10,11 +10,6 @@ let play = true;
 var configEditor = {};
 var editorBoard = null;
 var editorGame = new Chess()
-var fen, editorGame, piece_theme, promote_to, promoting, promotion_dialog;
-promotion_dialog = $("#promotion-dialog");
-promoting = false;
-piece_theme = "img/chesspieces/wikipedia/{piece}.png";
-
 
 
 startPlayEl.addEventListener('click', (e) => {
@@ -107,8 +102,6 @@ boardEditorEl.addEventListener('click', (e) => {
 
 
 function onSnapEndEditor(params) {
-	if (promoting) return; //if promoting we need to select the piece first
-
 	editorBoard.position(editorGame.fen())
 
 	console.log("here", params)
@@ -153,12 +146,10 @@ function onDropEditor(source, target) {
 
 	myAudioEl.play();
 	// illegal move
-	if (move === null) {
-		return 'snapback'
-	}
+	if (move === null) return 'snapback'
+
 	let currentFen = editorGame.fen()
 	if (move != null && 'captured' in move && move.piece != 'p') {
-
 		if (confirm("Do you want to move back ?")) {
 			console.log('Move Me to my old position')
 			editorGame.load(currentFen)
@@ -189,64 +180,6 @@ function onDropEditor(source, target) {
 			}
 		}
 	}
-
-	// illegal move
-	editorGame.undo(); //move is ok, now we can go ahead and check for promotion
-
-
-	// is it a promotion?
-	var source_rank = source.substring(2, 1);
-	var target_rank = target.substring(2, 1);
-
-	var piece = editorGame.get(source).type;
-
-	if (
-		piece === "p" &&
-		((source_rank === "7" && target_rank === "8") ||
-			(source_rank === "2" && target_rank === "1"))
-	) {
-		promoting = true;
-
-		// get piece images
-		$(".promotion-piece-q").attr("src", getImgSrc("q"));
-		$(".promotion-piece-r").attr("src", getImgSrc("r"));
-		$(".promotion-piece-n").attr("src", getImgSrc("n"));
-		$(".promotion-piece-b").attr("src", getImgSrc("b"));
-
-		//show the select piece to promote to dialog
-		promotion_dialog
-			.dialog({
-				modal: true,
-				height: 52,
-				width: 184,
-				resizable: true,
-				draggable: false,
-				close: () => {
-					move.promotion = promote_to
-					editorGame.move(move)
-				},
-				closeOnEscape: false,
-				dialogClass: "noTitleStuff",
-			})
-			.dialog("widget")
-			.position({
-				of: $("#boardEditorGame"),
-				my: "middle middle",
-				at: "middle middle",
-			});
-		//the actual move is made after the piece to promote to
-		//has been selected, in the stop event of the promotion piece selectable
-		return;
-	}
-	else {
-		var move = editorGame.move({
-			from: source,
-			to: target,
-			promotion: 'q' // NOTE: always promote to a queen for example simplicity
-		})
-	}
-	// no promotion, go ahead and move
-
 	editorTurnt = 1 - editorTurnt;
 	// make random legal move for black
 	// window.setTimeout(makeRandomMoveEditor, 250)
@@ -267,43 +200,3 @@ function makeRandomMoveEditor() {
 	editorBoard.position(editorGame.fen());
 }
 
-var onDialogClose = function () {
-	// console.log(promote_to);
-	move_cfg.promotion = promote_to;
-	makeMove(editorGame, move_cfg);
-};
-
-function getImgSrc(piece) {
-	return piece_theme.replace(
-		"{piece}",
-		editorGame.turn() + piece.toLocaleUpperCase()
-	);
-}
-
-$("#promote-to").selectable({
-	stop: function () {
-		$(".ui-selected", this).each(function () {
-			var selectable = $("#promote-to li");
-			var index = selectable.index(this);
-			if (index > -1) {
-				var promote_to_html = selectable[index].innerHTML;
-				var span = $("<div>" + promote_to_html + "</div>").find("span");
-				promote_to = span[0].innerHTML;
-			}
-			promotion_dialog.dialog("close");
-			$(".ui-selectee").removeClass("ui-selected");
-			editorBoard.position(editorGame.fen(), false);
-			// showSideToMove();
-			promoting = false;
-		});
-	},
-});
-
-function makeMove(editorGame, cfg) {
-	// see if the move is legal
-	var move = editorGame.move(cfg);
-	// illegal move
-	if (move === null) return "snapback";
-}
-
-window.pd = promotion_dialog
