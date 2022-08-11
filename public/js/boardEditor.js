@@ -63,8 +63,8 @@ arrangeEl.addEventListener('click', (e) => {
 	startPlayEl.style.display = null;
 	arrangeEl.style.display = "none";
 	clearEditorEl.style.display = null;
-	// let currentFen = editorBoard.fen();
-	let currentFen = "8/3P3P/8/1k6/8/6K1/1p1p4/8 w - - 0 1";
+	let currentFen = editorBoard.fen();
+	// let currentFen = "8/3P3P/8/1k6/8/6K1/1p1p4/8 w - - 0 1";
 
 	configEditor = {
 		draggable: true,
