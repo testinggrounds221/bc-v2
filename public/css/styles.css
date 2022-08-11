@@ -4,21 +4,22 @@ html {
 	height: 100%;
 }
 
+.highlight-from {
+	box-shadow: inset 0 0 10px 10px #ABA23A;
+	background: #f39814;
+}
+
+.highlight-to {
+	box-shadow: inset 0 0 10px 10px #CED26B;
+}
+
 /* .highlight-white {
-	box-shadow: inset 0 0 3px 3px yellow;
+	background-color: #ABA23A;
 }
 
 .highlight-black {
-	box-shadow: inset 0 0 3px 3px blue;
+	background-color: #CED26B;
 } */
-
-.highlight-white {
-	box-shadow: inset 0 0 3px 3px yellow;
-}
-
-.highlight-black {
-	box-shadow: inset 0 0 3px 3px blue;
-}
 
 #promotion-dialog {
 	display: none;

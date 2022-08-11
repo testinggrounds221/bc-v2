@@ -254,15 +254,15 @@ function onDropEditor(source, target) {
 		})
 	}
 	if (editorGame.turn() === "b") {
-		removeHighlights('white')
-		removeHighlights('black')
-		boardJqry.find('.square-' + source).addClass('highlight-white')
-		boardJqry.find('.square-' + target).addClass('highlight-white')
+		removeHighlights()
+		removeHighlights()
+		boardJqry.find('.square-' + source).addClass('highlight-from')
+		boardJqry.find('.square-' + target).addClass('highlight-to')
 	} else {
-		removeHighlights('white')
-		removeHighlights('black')
-		boardJqry.find('.square-' + source).addClass('highlight-black')
-		boardJqry.find('.square-' + target).addClass('highlight-black')
+		removeHighlights()
+		removeHighlights()
+		boardJqry.find('.square-' + source).addClass('highlight-from')
+		boardJqry.find('.square-' + target).addClass('highlight-to')
 		// squareToHighlight = move.to
 	}
 
@@ -330,9 +330,11 @@ function makeMove(editorGame, cfg) {
 	if (move === null) return "snapback";
 }
 
-function removeHighlights(color) {
+function removeHighlights() {
 	boardJqry.find('.' + squareClass)
-		.removeClass('highlight-' + color)
+		.removeClass('highlight-from')
+	boardJqry.find('.' + squareClass)
+		.removeClass('highlight-to')
 }
 
 function onMoveEnd() {
@@ -340,4 +342,4 @@ function onMoveEnd() {
 		.addClass('highlight-black')
 }
 
-window.pd = promotion_dialog
+window.bd = boardJqry
