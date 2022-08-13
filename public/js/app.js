@@ -27,7 +27,9 @@ var timeinterval;
 // initializing semantic UI dropdown
 $('.ui.dropdown')
 	.dropdown();
-
+$("#dialog").dialog({
+	autoOpen: false
+});
 
 // function for defining onchange on dropdown menus
 $("#roomDropdown").dropdown({

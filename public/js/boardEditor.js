@@ -15,10 +15,28 @@ var fen, editorGame, piece_theme, promote_to, promoting, promotion_dialog;
 promotion_dialog = $("#promotion-dialog");
 promoting = false;
 piece_theme = "img/chesspieces/wikipedia/{piece}.png";
-
 var squareToHighlight = null
 var squareClass = 'square-55d63'
 
+$(function () {
+	$("#dialog-4").dialog({
+		autoOpen: false,
+		modal: true,
+		buttons: {
+			Yes: function () {
+				moveBack($(this).data('move'))
+				$(this).dialog("close");
+			},
+			No: function () {
+				$(this).dialog("close");
+			},
+		},
+	});
+	// css("font-size", "30px");
+	$("#opener-4").click(function () {
+		$("#dialog-4").dialog("open");
+	});
+});
 
 startPlayEl.addEventListener('click', (e) => {
 	e.preventDefault();
@@ -67,8 +85,8 @@ arrangeEl.addEventListener('click', (e) => {
 	startPlayEl.style.display = null;
 	arrangeEl.style.display = "none";
 	clearEditorEl.style.display = null;
-	let currentFen = editorBoard.fen();
-	// let currentFen = "8/3P3P/8/1k6/8/6K1/1p1p4/8 w - - 0 1";
+	// let currentFen = editorBoard.fen();
+	let currentFen = "8/3P3P/8/1k6/8/6K1/1p1p4/8 w - - 0 1";
 
 	configEditor = {
 		draggable: true,
@@ -85,7 +103,7 @@ boardEditorEl.addEventListener('click', (e) => {
 	document.getElementById('gameMode').style.display = "none";
 	document.querySelector('#boardEditorGame').style.display = null;
 	// document.querySelector('#clearEditor').style.display = "none";
-	// document.querySelector('#startEditor').style.display = "none";	
+	// document.querySelector('#startEditor').style.display = "none";
 	configEditor = {
 		draggable: true,
 		position: 'start',
@@ -112,7 +130,6 @@ boardEditorEl.addEventListener('click', (e) => {
 
 function onSnapEndEditor(params) {
 	if (promoting) return; //if promoting we need to select the piece first
-
 	editorBoard.position(editorGame.fen())
 
 	console.log("here", params)
@@ -144,6 +161,43 @@ function onDragStartEditor(source, piece, position, orientation) {
 	// if (piece.search(/^b/) !== -1) return false
 }
 
+function moveBack(move) {
+	let currentFen = editorGame.fen()
+	console.log('Move Me to my old position')
+	editorGame.load(currentFen)
+	editorGame.put({ type: move.piece, color: move.color }, move.from)
+	editorGame.remove(move.to)
+	if (!editorGame.fen().includes("k")) {
+		editorGame.put({ type: 'k', color: 'b' }, move.from)
+	}
+	if (!editorGame.fen().includes("K")) {
+
+		editorGame.put({ type: 'k', color: 'w' }, move.from)
+	}
+	editorBoard.position(editorGame.fen())
+
+	let isCheck = null
+	if (editorGame.turn() === 'w') {
+		isCheck = editorGame.fen().replace('w', 'b')
+	}
+	if (editorGame.turn() === 'b') {
+		isCheck = editorGame.fen().replace('b', 'w')
+	}
+
+	let tempG = new Chess()
+	console.log("Is valid fen", tempG.load(isCheck))
+
+	if (tempG.in_check()) {
+		editorGame.load(currentFen)
+		editorBoard.position(editorGame.fen())
+		return { s: -1, m: "Cant Move back as it leads to Check" }
+	}
+	editorTurnt = 1 - editorTurnt;
+
+	return { s: 1, m: "Moved Back" }
+
+}
+
 function onDropEditor(source, target) {
 	// see if the move is legal
 	var move = editorGame.move({
@@ -157,48 +211,44 @@ function onDropEditor(source, target) {
 
 	myAudioEl.play();
 	// illegal move
-	if (move === null) {
-		return 'snapback'
-	}
+	if (move === null) return 'snapback'
 
 	let currentFen = editorGame.fen()
 	if (move != null && 'captured' in move && move.piece != 'p') {
+		// if (confirm("Do you want to move back ?")) {
+		// 	console.log('Move Me to my old position')
+		// 	editorGame.load(currentFen)
+		// 	editorGame.put({ type: move.piece, color: move.color }, move.from)
+		// 	editorGame.remove(move.to)
+		// 	if (!editorGame.fen().includes("k")) {
+		// 		editorGame.put({ type: 'k', color: 'b' }, move.from)
+		// 	}
+		// 	if (!editorGame.fen().includes("K")) {
 
-		if (confirm("Do you want to move back ?")) {
-			console.log('Move Me to my old position')
-			editorGame.load(currentFen)
-			editorGame.put({ type: move.piece, color: move.color }, move.from)
-			editorGame.remove(move.to)
-			if (!editorGame.fen().includes("k")) {
-				editorGame.put({ type: 'k', color: 'b' }, move.from)
-				console.log(editorGame.fen().includes("k"))
-				console.log(editorGame.fen())
+		// 		editorGame.put({ type: 'k', color: 'w' }, move.from)
+		// 	}
 
-			}
-			if (!editorGame.fen().includes("K")) {
-				editorGame.put({ type: 'k', color: 'w' }, move.from)
-				console.log(editorGame.fen().includes("K"))
-			}
+		// 	let isCheck = null
+		// 	if (editorGame.turn() === 'w') {
+		// 		isCheck = editorGame.fen().replace('w', 'b')
+		// 	}
+		// 	if (editorGame.turn() === 'b') {
+		// 		isCheck = editorGame.fen().replace('b', 'w')
+		// 	}
+		// 	let tempG = new Chess()
+		// 	console.log("Is valid fen", tempG.load(isCheck))
 
-			let isCheck = null
-			if (editorGame.turn() === 'w') {
-				isCheck = editorGame.fen().replace('w', 'b')
-			}
-			if (editorGame.turn() === 'b') {
-				isCheck = editorGame.fen().replace('b', 'w')
-			}
-			let tempG = new Chess()
-			console.log("Is valid fen", tempG.load(isCheck))
+		// 	if (tempG.in_check()) {
+		// 		alert("Cant Move back as it leads to Check")
+		// 		editorGame.load(currentFen)
+		// 		editorBoard.position(editorGame.fen())
+		// 	}
+		// }
+		// if (confirm("Do you want to move back ?")) { }
+		$("#dialog-4").data('move', move).dialog("open");
 
-			if (tempG.in_check()) {
-				alert("Cant Move back as it leads to Check")
-				editorGame.load(currentFen)
-				editorBoard.position(editorGame.fen())
-			}
-		}
+		// moveBack(move)
 	}
-
-	// illegal move
 	editorGame.undo(); //move is ok, now we can go ahead and check for promotion
 
 
@@ -265,13 +315,7 @@ function onDropEditor(source, target) {
 		boardJqry.find('.square-' + target).addClass('highlight-to')
 		// squareToHighlight = move.to
 	}
-
-
-	// no promotion, go ahead and move
-
 	editorTurnt = 1 - editorTurnt;
-
-
 	// make random legal move for black
 	// window.setTimeout(makeRandomMoveEditor, 250)
 }
