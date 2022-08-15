@@ -85,8 +85,8 @@ arrangeEl.addEventListener('click', (e) => {
 	startPlayEl.style.display = null;
 	arrangeEl.style.display = "none";
 	clearEditorEl.style.display = null;
-	let currentFen = editorBoard.fen();
-	// let currentFen = "rn2kbnr/pppppppp/b7/8/8/8/PPPPqPPP/RNB1K2R w KQkq - 0 1";
+	// let currentFen = editorBoard.fen();
+	let currentFen = "8/3P3P/8/1k6/8/6K1/1p1p4/8 w - - 0 1";
 
 	configEditor = {
 		draggable: true,
@@ -127,7 +127,6 @@ boardEditorEl.addEventListener('click', (e) => {
 // })
 
 
-var validMoves = []
 
 function onSnapEndEditor(params) {
 	if (promoting) return; //if promoting we need to select the piece first
@@ -136,94 +135,44 @@ function onSnapEndEditor(params) {
 	console.log("here", params)
 }
 
-
 function onDragStartEditor(source, piece, position, orientation) {
 	// do not pick up pieces if the editorGame is over
-	let cust = source;
-
-	let a = cust.charCodeAt(0);
-	let b = cust.charAt(1);
-	if (piece.charAt(1) == 'K' && piece.charAt(0) == editorGame.turn()) {
-		console.log('Here')
-		validMoves = validMovesKing(a, b)
-	}
-
-
-	let flag = 0
-
 	if (editorGame.game_over()) {
 		if (editorGame.in_draw()) {
 			alert('Game Draw!!');
 		}
-		else if (editorGame.in_checkmate()) {
-			console.log('Check Mate')
-			for (let i = 0; i < validMoves.length - 1; i++) {
-				if (editorGame.get(validMoves[i]) != null) {
-					console.log(editorGame.get(validMoves[i]).color + " " + editorGame.turn())
-					if (editorGame.get(validMoves[i]).color != editorGame.turn()) {
-						flag++
-						console.log(flag++)
-					}
-				}
-			}
-			if (flag > 0 && piece.charAt(0) == editorGame.turn()) {
-				if (piece === 'bK' || piece == 'wK') {
-					flag = 0;
-					return;
-				} else {
-					console.log('I am Here')
-					flag = 0;
-					return;
-				}
-			}
-			else {
-				if (piece.charAt(1) == 'K' && piece.charAt(0) == editorGame.turn()) {
-					if (editorTurnt === 1) {
-						flag = 0;
-						alert('You won the game!!');
-						return false
-					} else {
-						flag = 0;
-						alert('You lost!!');
-						return false
-					}
-				}
-				else if (piece.charAt(1) != 'K') {
-					return;
-				}
-			}
+		else if (editorGame.in_checkmate())
+			if (editorGame.turn() === 'w')
+				alert(`Black won the game!!`);
+			else
+				alert(`White won the game!!`);
 
-		}
+
+		// if (editorTurnt === 1) {
+		// 	alert('You won the game!!');
+		// } else {
+		// 	alert('You lost!!');
+		// }
 		return false
 	}
 
 	// only pick up pieces for White
 
 	// if (piece.search(/^b/) !== -1) return false
-
 }
 
 function moveBack(move) {
 	let currentFen = editorGame.fen()
 	console.log('Move Me to my old position')
 	editorGame.load(currentFen)
-	editorGame.put({
-		type: move.piece,
-		color: move.color
-	}, move.from)
+	editorGame.put({ type: move.piece, color: move.color }, move.from)
 	editorGame.remove(move.to)
 	if (!editorGame.fen().includes("k")) {
-		editorGame.put({
-			type: 'k',
-			color: 'b'
-		}, move.from)
+		editorGame.put({ type: 'k', color: 'b' }, move.from)
 	}
 	if (!editorGame.fen().includes("K")) {
 
-		editorGame.put({
-			type: 'k',
-			color: 'w'
-		}, move.from)
+		editorGame.put({ type: 'k', color: 'w' }, move.from)
 	}
 	editorBoard.position(editorGame.fen())
 
@@ -241,36 +190,12 @@ function moveBack(move) {
 	if (tempG.in_check()) {
 		editorGame.load(currentFen)
 		editorBoard.position(editorGame.fen())
-		return {
-			s: -1,
-			m: "Cant Move back as it leads to Check"
-		}
+		return { s: -1, m: "Cant Move back as it leads to Check" }
 	}
 	editorTurnt = 1 - editorTurnt;
 
-	return {
-		s: 1,
-		m: "Moved Back"
-	}
+	return { s: 1, m: "Moved Back" }
 
-}
-
-
-function validMovesKing(a, b) {
-	let alpha = a;
-	let num = parseInt(b);
-
-
-	var movesKing = []
-	movesKing[0] = String.fromCharCode((alpha)).concat(num - 1);
-	movesKing[1] = String.fromCharCode((alpha - 1)).concat(num - 1);
-	movesKing[2] = String.fromCharCode((alpha + 1)).concat(num - 1);
-	movesKing[3] = String.fromCharCode((alpha)).concat(num + 1);
-	movesKing[4] = String.fromCharCode((alpha - 1)).concat(num + 1);
-	movesKing[5] = String.fromCharCode((alpha + 1)).concat(num + 1);
-	movesKing[6] = String.fromCharCode((alpha - 1)).concat(num);
-	movesKing[7] = String.fromCharCode((alpha + 1)).concat(num);
-	return movesKing
 }
 
 function onDropEditor(source, target) {
@@ -283,56 +208,46 @@ function onDropEditor(source, target) {
 	document.getElementById('trn').style.display = null;
 
 	document.getElementById('trn').innerHTML = editorGame.turn();
-	var custommove = editorGame.get(source);
 
-
-	let count1 = 0
 	myAudioEl.play();
 	// illegal move
+	if (move === null) return 'snapback'
+
 	let currentFen = editorGame.fen()
-	if (move === null) {
-		if (editorGame.in_checkmate()) {
-			console.log('Check Mate')
-			if (custommove != null) {
-				console.log('Custom Move Nott Null')
-				if (custommove.color == editorGame.turn() && validMoves.includes(target)) {
-					var targetmove = editorGame.get(target);
-					if (targetmove == null) {
-						return
-					}
-					else if (custommove.color != targetmove.color && custommove.type == 'k' && custommove.color == editorGame.turn()) {
-						console.log('Return')
-						editorGame.load(currentFen)
-						editorGame.put({ type: custommove.type, color: custommove.color }, target)
-						editorGame.remove(target)
-						let alterTurnFen = null
-						if (editorGame.turn() === 'w') {
-							alterTurnFen = editorGame.fen().replace('w', 'b')
-						}
-						if (editorGame.turn() === 'b') {
-							alterTurnFen = editorGame.fen().replace('b', 'w')
-						}
-						editorGame.load(alterTurnFen)
-						editorBoard.position(editorGame.fen(), false)
-					}
-				} else {
-					console.log('Snap');
-					return 'snapback'
-				}
-			}
-			else {
-				return 'snapback'
-			}
-		}
-		else {
-			return 'snapback'
-		}
-	}
-
-
 	if (move != null && 'captured' in move && move.piece != 'p') {
+		// if (confirm("Do you want to move back ?")) {
+		// 	console.log('Move Me to my old position')
+		// 	editorGame.load(currentFen)
+		// 	editorGame.put({ type: move.piece, color: move.color }, move.from)
+		// 	editorGame.remove(move.to)
+		// 	if (!editorGame.fen().includes("k")) {
+		// 		editorGame.put({ type: 'k', color: 'b' }, move.from)
+		// 	}
+		// 	if (!editorGame.fen().includes("K")) {
+
+		// 		editorGame.put({ type: 'k', color: 'w' }, move.from)
+		// 	}
+
+		// 	let isCheck = null
+		// 	if (editorGame.turn() === 'w') {
+		// 		isCheck = editorGame.fen().replace('w', 'b')
+		// 	}
+		// 	if (editorGame.turn() === 'b') {
+		// 		isCheck = editorGame.fen().replace('b', 'w')
+		// 	}
+		// 	let tempG = new Chess()
+		// 	console.log("Is valid fen", tempG.load(isCheck))
+
+		// 	if (tempG.in_check()) {
+		// 		alert("Cant Move back as it leads to Check")
+		// 		editorGame.load(currentFen)
+		// 		editorBoard.position(editorGame.fen())
+		// 	}
+		// }
+		// if (confirm("Do you want to move back ?")) { }
 		$("#dialog-4").data('move', move).dialog("open");
 
+		// moveBack(move)
 	}
 	editorGame.undo(); //move is ok, now we can go ahead and check for promotion
 
@@ -341,70 +256,68 @@ function onDropEditor(source, target) {
 	var source_rank = source.substring(2, 1);
 	var target_rank = target.substring(2, 1);
 
-	if (source != null) {
-		var piece = editorGame.get(source).type;
+	var piece = editorGame.get(source).type;
 
-		if (
-			piece === "p" &&
-			((source_rank === "7" && target_rank === "8") ||
-				(source_rank === "2" && target_rank === "1"))
-		) {
-			promoting = true;
+	if (
+		piece === "p" &&
+		((source_rank === "7" && target_rank === "8") ||
+			(source_rank === "2" && target_rank === "1"))
+	) {
+		promoting = true;
 
-			// get piece images
-			$(".promotion-piece-q").attr("src", getImgSrc("q"));
-			$(".promotion-piece-r").attr("src", getImgSrc("r"));
-			$(".promotion-piece-n").attr("src", getImgSrc("n"));
-			$(".promotion-piece-b").attr("src", getImgSrc("b"));
+		// get piece images
+		$(".promotion-piece-q").attr("src", getImgSrc("q"));
+		$(".promotion-piece-r").attr("src", getImgSrc("r"));
+		$(".promotion-piece-n").attr("src", getImgSrc("n"));
+		$(".promotion-piece-b").attr("src", getImgSrc("b"));
 
-			//show the select piece to promote to dialog
-			promotion_dialog
-				.dialog({
-					modal: true,
-					height: 52,
-					width: 184,
-					resizable: true,
-					draggable: false,
-					close: () => {
-						move.promotion = promote_to
-						editorGame.move(move)
-					},
-					closeOnEscape: false,
-					dialogClass: "noTitleStuff",
-				})
-				.dialog("widget")
-				.position({
-					of: $("#boardEditorGame"),
-					my: "middle middle",
-					at: "middle middle",
-				});
-			//the actual move is made after the piece to promote to
-			//has been selected, in the stop event of the promotion piece selectable
-			return;
-		} else {
-			var move = editorGame.move({
-				from: source,
-				to: target,
-				promotion: 'q' // NOTE: always promote to a queen for example simplicity
+		//show the select piece to promote to dialog
+		promotion_dialog
+			.dialog({
+				modal: true,
+				height: 52,
+				width: 184,
+				resizable: true,
+				draggable: false,
+				close: () => {
+					move.promotion = promote_to
+					editorGame.move(move)
+				},
+				closeOnEscape: false,
+				dialogClass: "noTitleStuff",
 			})
-		}
-		if (editorGame.turn() === "b") {
-			removeHighlights()
-			removeHighlights()
-			boardJqry.find('.square-' + source).addClass('highlight-from')
-			boardJqry.find('.square-' + target).addClass('highlight-to')
-		} else {
-			removeHighlights()
-			removeHighlights()
-			boardJqry.find('.square-' + source).addClass('highlight-from')
-			boardJqry.find('.square-' + target).addClass('highlight-to')
-			// squareToHighlight = move.to
-		}
-		editorTurnt = 1 - editorTurnt;
-		// make random legal move for black
-		// window.setTimeout(makeRandomMoveEditor, 250)
+			.dialog("widget")
+			.position({
+				of: $("#boardEditorGame"),
+				my: "middle middle",
+				at: "middle middle",
+			});
+		//the actual move is made after the piece to promote to
+		//has been selected, in the stop event of the promotion piece selectable
+		return;
 	}
-
+	else {
+		var move = editorGame.move({
+			from: source,
+			to: target,
+			promotion: 'q' // NOTE: always promote to a queen for example simplicity
+		})
+	}
+	if (editorGame.turn() === "b") {
+		removeHighlights()
+		removeHighlights()
+		boardJqry.find('.square-' + source).addClass('highlight-from')
+		boardJqry.find('.square-' + target).addClass('highlight-to')
+	} else {
+		removeHighlights()
+		removeHighlights()
+		boardJqry.find('.square-' + source).addClass('highlight-from')
+		boardJqry.find('.square-' + target).addClass('highlight-to')
+		// squareToHighlight = move.to
+	}
+	editorTurnt = 1 - editorTurnt;
+	// make random legal move for black
+	// window.setTimeout(makeRandomMoveEditor, 250)
 }
 
 function makeRandomMoveEditor() {
@@ -474,4 +387,3 @@ function onMoveEnd() {
 }
 
 window.bd = boardJqry
-
