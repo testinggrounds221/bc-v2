@@ -85,8 +85,8 @@ arrangeEl.addEventListener('click', (e) => {
 	startPlayEl.style.display = null;
 	arrangeEl.style.display = "none";
 	clearEditorEl.style.display = null;
-	// let currentFen = editorBoard.fen();
-	let currentFen = "8/3P3P/8/1k6/8/6K1/1p1p4/8 w - - 0 1";
+	let currentFen = editorBoard.fen();
+	// let currentFen = "8/3P3P/8/1k6/8/6K1/1p1p4/8 w - - 0 1";
 
 	configEditor = {
 		draggable: true,
@@ -177,19 +177,28 @@ function moveBack(move) {
 	editorBoard.position(editorGame.fen())
 
 	let isCheck = null
+	let eg = editorGame.fen()
 	if (editorGame.turn() === 'w') {
-		isCheck = editorGame.fen().replace('w', 'b')
+		let myArray = eg.split(" ");
+		myArray[1] = "b";
+		isCheck = myArray.join(" ");
 	}
 	if (editorGame.turn() === 'b') {
-		isCheck = editorGame.fen().replace('b', 'w')
+		let myArray = eg.split(" ");
+		myArray[1] = "w";
+		isCheck = myArray.join(" ");
 	}
+	console.log(editorGame.fen(), "Editor GAME")
+	console.log(isCheck, "ischeck")
 
 	let tempG = new Chess()
 	console.log("Is valid fen", tempG.load(isCheck))
+	console.log("Is valid fen", tempG.fen(), "in here")
 
 	if (tempG.in_check()) {
 		editorGame.load(currentFen)
 		editorBoard.position(editorGame.fen())
+		alert("Cant Move back as it leads to Check")
 		return { s: -1, m: "Cant Move back as it leads to Check" }
 	}
 	editorTurnt = 1 - editorTurnt;
