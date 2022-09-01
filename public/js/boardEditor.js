@@ -196,8 +196,8 @@ function onDragStartEditor(source, piece, position, orientation) {
 		}
 		return false
 	}
-
-	else if (editorGame.in_check()) {
+	
+	else if(editorGame.in_check()){
 		console.log('Check')
 		for (let i = 0; i < validMoves.length - 1; i++) {
 			if (editorGame.get(validMoves[i]) != null) {
@@ -270,8 +270,10 @@ function moveBack(move) {
 	if (tempG.in_check()) {
 		editorGame.load(currentFen)
 		editorBoard.position(editorGame.fen())
-		alert("Cant Move back as it leads to Check")
-		return { s: -1, m: "Cant Move back as it leads to Check" }
+		return {
+			s: -1,
+			m: "Cant Move back as it leads to Check"
+		}
 	}
 	editorTurnt = 1 - editorTurnt;
 
@@ -333,6 +335,10 @@ function onDropEditor(source, target) {
 						editorGame.load(currentFen)
 						editorGame.put({ type: custommove.type, color: custommove.color }, target)
 						editorGame.remove(target)
+						if(editorGame.in_check()){
+							editorGame.load(currentFen);
+							return;
+						}
 						let isCheck = null
 						let eg = editorGame.fen()
 						if (editorGame.turn() === 'w') {
