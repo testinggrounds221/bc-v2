@@ -147,6 +147,9 @@ function onDragStartEditor(source, piece, position, orientation) {
 		console.log('Here')
 		validMoves = validMovesKing(a, b)
 	}
+	else{
+		return;
+	}
 
 
 	let flag = 0
@@ -168,6 +171,7 @@ function onDragStartEditor(source, piece, position, orientation) {
 			}
 			if (flag > 0 && piece.charAt(0) == editorGame.turn()) {
 				if (piece === 'bK' || piece == 'wK') {
+					console.log("King")
 					flag = 0;
 					return;
 				} else {
@@ -178,6 +182,8 @@ function onDragStartEditor(source, piece, position, orientation) {
 			}
 			else {
 				if (piece.charAt(1) == 'K' && piece.charAt(0) == editorGame.turn()) {
+					console.log("Helloo")
+
 					if (editorTurnt === 1) {
 						flag = 0;
 						alert('You won the game!!');
@@ -191,11 +197,15 @@ function onDragStartEditor(source, piece, position, orientation) {
 				else if (piece.charAt(1) != 'K') {
 					return;
 				}
+				else{
+					console.log("Helloo")
+				}
 			}
 
 		}
 		return false
 	}
+
 	
 	else if(editorGame.in_check()){
 		console.log('Check')
@@ -314,8 +324,6 @@ function onDropEditor(source, target) {
 	document.getElementById('trn').innerHTML = editorGame.turn();
 	var custommove = editorGame.get(source);
 
-
-	let count1 = 0
 	myAudioEl.play();
 	// illegal move
 	let currentFen = editorGame.fen()
@@ -327,8 +335,10 @@ function onDropEditor(source, target) {
 				console.log('Custom Move Nott Null')
 				if (custommove.color == editorGame.turn() && validMoves.includes(target)) {
 					var targetmove = editorGame.get(target);
+					console.log("Custom Move")
 					if (targetmove == null) {
-						return
+						console.log("Target Move Null")
+						return 'snapback'
 					}
 					else if (custommove.color != targetmove.color && custommove.type == 'k' && custommove.color == editorGame.turn()) {
 						console.log('Return')
@@ -336,6 +346,7 @@ function onDropEditor(source, target) {
 						editorGame.put({ type: custommove.type, color: custommove.color }, target)
 						editorGame.remove(target)
 						if(editorGame.in_check()){
+							console.log("Reload")
 							editorGame.load(currentFen);
 							return;
 						}
@@ -351,21 +362,26 @@ function onDropEditor(source, target) {
 							myArray[1] = "w";
 							isCheck = myArray.join(" ");
 						}
+						console.log("Load Check")
 						editorGame.load(isCheck)
 						editorBoard.position(isCheck, false);
 					}
-				} else {
+				} 
+				else {
 					console.log('Snap');
-					return 'snapback'
+					return;
 				}
 			}
 			else {
-				return 'snapback'
+				console.log('Snap 1');
+				return
 			}
 		}
 		else {
-			return 'snapback'
+			console.log('Snap 2');
+			return 
 		}
+		return;	
 	}
 
 
