@@ -86,7 +86,7 @@ arrangeEl.addEventListener('click', (e) => {
 	arrangeEl.style.display = "none";
 	clearEditorEl.style.display = null;
 	//let currentFen = editorBoard.fen();
-	let currentFen = "rnbqkbnr/ppp1pppp/8/3pK3/8/8/PPPPPPPP/RNBQ1BNR w HAkq - 0 1";
+	let currentFen = "r1bnkn1r/ppp1Qppp/2p2p2/8/8/4R3/PPPPPPPP/RNB1KBN1 w Qkq - 0 1";
 
 	configEditor = {
 		draggable: true,
@@ -147,7 +147,7 @@ function onDragStartEditor(source, piece, position, orientation) {
 		console.log('Here')
 		validMoves = validMovesKing(a, b)
 	}
-	else{
+	else {
 		return;
 	}
 
@@ -173,11 +173,11 @@ function onDragStartEditor(source, piece, position, orientation) {
 				if (piece === 'bK' || piece == 'wK') {
 					console.log("King")
 					flag = 0;
-					return;
+					return
 				} else {
 					console.log('I am Here')
 					flag = 0;
-					return;
+					return
 				}
 			}
 			else {
@@ -197,7 +197,7 @@ function onDragStartEditor(source, piece, position, orientation) {
 				else if (piece.charAt(1) != 'K') {
 					return;
 				}
-				else{
+				else {
 					console.log("Helloo")
 				}
 			}
@@ -206,8 +206,8 @@ function onDragStartEditor(source, piece, position, orientation) {
 		return false
 	}
 
-	
-	else if(editorGame.in_check()){
+
+	else if (editorGame.in_check()) {
 		console.log('Check')
 		for (let i = 0; i < validMoves.length - 1; i++) {
 			if (editorGame.get(validMoves[i]) != null) {
@@ -236,6 +236,29 @@ function onDragStartEditor(source, piece, position, orientation) {
 	// if (piece.search(/^b/) !== -1) return false
 
 }
+
+function calc(source) {
+	var flag = 0;
+	let cust = source;
+
+	let a = cust.charCodeAt(0);
+	let b = cust.charAt(1);
+
+	validMoves = validMovesKing(a, b)
+	for (let i = 0; i < validMoves.length - 1; i++) {
+		if (editorGame.get(validMoves[i]) != null) {
+			console.log(editorGame.get(validMoves[i]).color + " " + editorGame.turn())
+			if (editorGame.get(validMoves[i]).color != editorGame.turn()) {
+				flag++
+				console.log(flag++)
+			}
+		}
+	}
+	console.log(flag)
+	return flag;
+
+}
+
 
 function moveBack(move) {
 	let currentFen = editorGame.fen()
@@ -345,7 +368,20 @@ function onDropEditor(source, target) {
 						editorGame.load(currentFen)
 						editorGame.put({ type: custommove.type, color: custommove.color }, target)
 						editorGame.remove(target)
-						if(editorGame.in_check()){
+						if (editorGame.in_check()) {
+							let moveKing = calc(source);
+							if (moveKing <= 1) {
+								console.log("Check Mate")
+								if (editorTurnt === 1) {
+									alert('You won the game!!')
+									editorGame.load(currentFen);
+									return
+								} else {
+									alert('You lost!!')
+									editorGame.load(currentFen);
+									return
+								}
+							}
 							console.log("Reload")
 							editorGame.load(currentFen);
 							return;
@@ -366,7 +402,7 @@ function onDropEditor(source, target) {
 						editorGame.load(isCheck)
 						editorBoard.position(isCheck, false);
 					}
-				} 
+				}
 				else {
 					console.log('Snap');
 					return;
@@ -379,15 +415,14 @@ function onDropEditor(source, target) {
 		}
 		else {
 			console.log('Snap 2');
-			return 
+			return
 		}
-		return;	
+		return;
 	}
 
 
 	if (move != null && 'captured' in move && move.piece != 'p') {
 		$("#dialog-4").data('move', move).dialog("open");
-
 	}
 
 
