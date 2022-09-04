@@ -85,8 +85,8 @@ arrangeEl.addEventListener('click', (e) => {
 	startPlayEl.style.display = null;
 	arrangeEl.style.display = "none";
 	clearEditorEl.style.display = null;
-	//let currentFen = editorBoard.fen();
-	let currentFen = "r1bnkn1r/ppp1Qppp/2p2p2/8/8/4R3/PPPPPPPP/RNB1KBN1 w Qkq - 0 1";
+	let currentFen = editorBoard.fen();
+	// let currentFen = "r1bnkn1r/ppp1Qppp/2p2p2/8/8/4R3/PPPPPPPP/RNB1KBN1 w Qkq - 0 1";
 
 	configEditor = {
 		draggable: true,
@@ -422,7 +422,8 @@ function onDropEditor(source, target) {
 
 
 	if (move != null && 'captured' in move && move.piece != 'p') {
-		$("#dialog-4").data('move', move).dialog("open");
+		if (!checkMoveBackLeadstoCheck(editorGame.fen(), move))
+			$("#dialog-4").data('move', move).dialog("open");
 	}
 
 
@@ -497,6 +498,46 @@ function onDropEditor(source, target) {
 		// window.setTimeout(makeRandomMoveEditor, 250)
 	}
 
+}
+
+function checkMoveBackLeadstoCheck(currFen, move) {
+	let tG = new Chess()
+
+	tG.load(currFen)
+	tG.put({
+		type: move.piece,
+		color: move.color
+	}, move.from)
+	tG.remove(move.to)
+	if (!tG.fen().includes("k")) {
+		tG.put({
+			type: 'k',
+			color: 'b'
+		}, move.from)
+	}
+	if (!tG.fen().includes("K")) {
+
+		tG.put({
+			type: 'k',
+			color: 'w'
+		}, move.from)
+	}
+	let isCheck = null
+	let eg = tG.fen()
+	if (tG.turn() === 'w') {
+		let myArray = eg.split(" ");
+		myArray[1] = "b";
+		isCheck = myArray.join(" ");
+	}
+	if (tG.turn() === 'b') {
+		let myArray = eg.split(" ");
+		myArray[1] = "w";
+		isCheck = myArray.join(" ");
+	}
+
+	console.log("Is valid fen", tG.load(isCheck))
+
+	return tG.in_check()
 }
 
 function makeRandomMoveEditor() {
