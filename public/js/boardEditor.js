@@ -174,35 +174,35 @@ function noOfKingNeighbours(source) {
 
 }
 
-function sampleCheckMate(flag, piece) {
-	if (flag > 0 && piece.charAt(0) == editorGame.turn()) {
-		if (piece === 'bK' || piece == 'wK') {
-			console.log("King")
-			flag = 0;
-			return 1
-		} else {
-			console.log('I am Here')
-			flag = 0;
-			return 0
-		}
-	} else {
-		if (piece.charAt(1) == 'K' && piece.charAt(0) == editorGame.turn()) {
-			if (editorGame.turn() === 'w') {
-				alert('Black Win!!')
-				editorGame.load(currentFen);
-				return
-			} else {
-				alert('White Won!!')
-				editorGame.load(currentFen);
-				return
-			}
-		} else if (piece.charAt(1) != 'K') {
-			return 0;
-		} else {
-			console.log("Helloo")
-		}
-	}
-}
+// function sampleCheckMate(flag, piece) {
+// 	if (flag > 0 && piece.charAt(0) == editorGame.turn()) {
+// 		if (piece === 'bK' || piece == 'wK') {
+// 			console.log("King")
+// 			flag = 0;
+// 			return 1
+// 		} else {
+// 			console.log('I am Here')
+// 			flag = 0;
+// 			return 0
+// 		}
+// 	} else {
+// 		if (piece.charAt(1) == 'K' && piece.charAt(0) == editorGame.turn()) {
+// 			if (editorGame.turn() === 'w') {
+// 				alert('Black Win!!')
+// 				editorGame.load(currentFen);
+// 				return
+// 			} else {
+// 				alert('White Won!!')
+// 				editorGame.load(currentFen);
+// 				return
+// 			}
+// 		} else if (piece.charAt(1) != 'K') {
+// 			return 0;
+// 		} else {
+// 			console.log("Helloo")
+// 		}
+// 	}
+// }
 
 
 function getKing(color) {
@@ -217,11 +217,9 @@ function onDragStartEditor(source, piece, position, orientation) {
 	// CHECK AT END OF ONDROPEDITOR
 	
 	if (editorGame.in_check() && isBoomCheckMate(editorGame.fen())) {
-		if (editorGame.turn() === 'w')
-		console.log('Black Wins')
+		if (editorGame.turn() === 'w')		
 			alert('Black Wins')
-		if (editorGame.turn() === 'b')
-		console.log('White Wins')
+		if (editorGame.turn() === 'b')		
 			alert('White Wins')
 		return
 	}
@@ -476,6 +474,13 @@ function onDropEditor(source, target) {
 		editorTurnt = 1 - editorTurnt;
 		// make random legal move for black
 		// window.setTimeout(makeRandomMoveEditor, 250)
+		if (editorGame.in_check() && isBoomCheckMate(editorGame.fen())) {
+			if (editorGame.turn() === 'w')		
+				alert('Black Wins')
+			if (editorGame.turn() === 'b')		
+				alert('White Wins')
+			return
+		}
 	}
 
 }
