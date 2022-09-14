@@ -545,17 +545,23 @@ function isBoomCheckMate(fen) {
 
 	console.log(c.moves({ verbose: true, legal: false }))
 	let f = 0
-	for (mv in c.moves({ verbose: true, legal: false })) {
-		if (mv.flags === 'c'){
+	let mvs = c.moves({ verbose: true, legal: false })
+	for (let i = 0; i < mvs.length; i++) {
+		const mv = mvs[i];
+		console.log(mv.flags)
+
+		if (mv.flags === 'c') {
 			console.log(mv)
 		}
-		if (mv.flags === 'c' && isCheckAfterRemovePiece(fen, mv.to)) {
+		if (mv.flags === 'c' && !isCheckAfterRemovePiece(fen, mv.to)) {
 			console.log(mv)
 			f++;
 		}
 	}
 	return (!f > 0) 
 }
+
+
 
 window.bd = boardJqry
 window.editorGame = editorGame
