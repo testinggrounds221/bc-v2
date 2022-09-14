@@ -85,8 +85,8 @@ arrangeEl.addEventListener('click', (e) => {
 	startPlayEl.style.display = null;
 	arrangeEl.style.display = "none";
 	clearEditorEl.style.display = null;
-	let currentFen = editorBoard.fen();
-	// let currentFen = "r1bnkn1r/ppp1Qppp/2p2p2/8/8/4R3/PPPPPPPP/RNB1KBN1 w Qkq - 0 1";
+	//let currentFen = editorBoard.fen();
+	let currentFen = "r1bnkn1r/ppp1Qppp/2p2p2/8/8/4R3/PPPPPPPP/RNB1KBN1 w Qkq - 0 1";
 
 	configEditor = {
 		draggable: true,
@@ -137,120 +137,35 @@ function onSnapEndEditor(params) {
 }
 
 
-function onDragStartEditor(source, piece, position, orientation) {
-	// do not pick up pieces if the editorGame is over
-	let cust = source;
-
-	let a = cust.charCodeAt(0);
-	let b = cust.charAt(1);
-	if (piece.charAt(1) == 'K' && piece.charAt(0) == editorGame.turn()) {
-		console.log('Here')
-		validMoves = validMovesKing(a, b)
-	}
-	else {
-		return;
-	}
-
-
-	let flag = 0
-
-	if (editorGame.game_over()) {
-		if (editorGame.in_draw()) {
-			alert('Game Draw!!');
-		}
-		else if (editorGame.in_checkmate() || editorGame.in_check()) {
-			console.log('Check Mate')
-			for (let i = 0; i < validMoves.length - 1; i++) {
-				if (editorGame.get(validMoves[i]) != null) {
-					console.log(editorGame.get(validMoves[i]).color + " " + editorGame.turn())
-					if (editorGame.get(validMoves[i]).color != editorGame.turn()) {
-						flag++
-						console.log(flag++)
-					}
-				}
-			}
-			if (flag > 0 && piece.charAt(0) == editorGame.turn()) {
-				if (piece === 'bK' || piece == 'wK') {
-					console.log("King")
-					flag = 0;
-					return
-				} else {
-					console.log('I am Here')
-					flag = 0;
-					return
-				}
-			}
-			else {
-				if (piece.charAt(1) == 'K' && piece.charAt(0) == editorGame.turn()) {
-					console.log("Helloo")
-
-					if (editorTurnt === 1) {
-						flag = 0;
-						alert('You won the game!!');
-						return false
-					} else {
-						flag = 0;
-						alert('You lost!!');
-						return false
-					}
-				}
-				else if (piece.charAt(1) != 'K') {
-					return;
-				}
-				else {
-					console.log("Helloo")
-				}
-			}
-
-		}
-		return false
-	}
-
-
-	else if (editorGame.in_check()) {
-		console.log('Check')
-		for (let i = 0; i < validMoves.length - 1; i++) {
-			if (editorGame.get(validMoves[i]) != null) {
-				console.log(editorGame.get(validMoves[i]).color + " " + editorGame.turn())
-				if (editorGame.get(validMoves[i]).color != editorGame.turn()) {
-					flag++
-					console.log(flag++)
-				}
-			}
-		}
-
-		if (flag > 0 && piece.charAt(0) == editorGame.turn()) {
-			if (piece === 'bK' || piece == 'wK') {
-				flag = 0;
-				return;
-			} else {
-				console.log('I am Here')
-				flag = 0;
-				return;
-			}
-		}
-	}
-
-	// only pick up pieces for White
-
-	// if (piece.search(/^b/) !== -1) return false
-
+function isCheckAfterRemovePiece(fen, square) {
+	// we see isCheck for turn
+	let c = new Chess()
+	c.load(fen)
+	c.remove(square)
+	return c.in_check() // If in Check dont allow to cut, remove from valid moves
 }
 
-function calc(source) {
+function kingMoves(source) {
 	var flag = 0;
 	let cust = source;
 
 	let a = cust.charCodeAt(0);
 	let b = cust.charAt(1);
 
+
+	let currentFen = editorGame.fen()
+
 	validMoves = validMovesKing(a, b)
 	for (let i = 0; i < validMoves.length - 1; i++) {
 		if (editorGame.get(validMoves[i]) != null) {
 			console.log(editorGame.get(validMoves[i]).color + " " + editorGame.turn())
 			if (editorGame.get(validMoves[i]).color != editorGame.turn()) {
-				flag++
-				console.log(flag++)
+				if (isCheckAfterRemovePiece(currentFen, validMoves[i])) {
+					let index = validMoves.indexOf(validMoves[i])
+					validMoves.splice(index, 1)
+				} else {
+					flag++
+				}
 			}
 		}
 	}
@@ -258,6 +173,101 @@ function calc(source) {
 	return flag;
 
 }
+
+function sampleCheckMate(flag, piece) {
+	if (flag > 0 && piece.charAt(0) == editorGame.turn()) {
+		if (piece === 'bK' || piece == 'wK') {
+			console.log("King")
+			flag = 0;
+			return 1
+		} else {
+			console.log('I am Here')
+			flag = 0;
+			return 0
+		}
+	} else {
+		if (piece.charAt(1) == 'K' && piece.charAt(0) == editorGame.turn()) {
+			if (editorTurnt === 1) {
+				flag = 0;
+				alert('You won the game!!');
+				return false
+			} else {
+				flag = 0;
+				alert('You lost!!');
+				return false
+			}
+		} else if (piece.charAt(1) != 'K') {
+			return 0;
+		} else {
+			console.log("Helloo")
+		}
+	}
+}
+
+
+function getKing(color) {
+	for (let sq of editorGame.SQUARES) {
+		if (editorGame.get(sq) && editorGame.get(sq).type === 'k' && editorGame.get(sq).color === color)
+			return sq
+	}
+}
+
+
+function onDragStartEditor(source, piece, position, orientation) {
+	// do not pick up pieces if the editorGame is over
+	let flag = 0
+	if (piece.charAt(1) == 'K' && piece.charAt(0) == editorGame.turn()) {
+		flag = kingMoves(source)
+		console.log(flag)
+	} else {
+		return;
+	}
+
+
+
+	if (editorGame.game_over()) {
+		if (editorGame.in_draw()) {
+			alert('Game Draw!!');
+		} else if (editorGame.in_checkmate()) {
+			console.log('Check Mate')
+			if (sampleCheckMate(flag, piece)) {
+				return
+			}
+		}
+		return false
+	}
+
+
+	// else if(editorGame.in_check()){
+	// 	console.log('Check')
+	// 	for (let i = 0; i < validMoves.length - 1; i++) {
+	// 		if (editorGame.get(validMoves[i]) != null) {
+	// 			console.log(editorGame.get(validMoves[i]).color + " " + editorGame.turn())
+	// 			if (editorGame.get(validMoves[i]).color != editorGame.turn()) {
+	// 				flag++
+	// 				console.log(flag++)
+	// 			}
+	// 		}
+	// 	}
+
+	// 	if (flag > 0 && piece.charAt(0) == editorGame.turn()) {
+	// 		if (piece === 'bK' || piece == 'wK') {
+	// 			flag = 0;
+	// 			return;
+	// 		} else {
+	// 			console.log('I am Here')
+	// 			flag = 0;
+	// 			return;
+	// 		}
+	// 	}
+	// }
+
+	// only pick up pieces for White
+
+	// if (piece.search(/^b/) !== -1) return false
+
+}
+
 
 
 function moveBack(move) {
@@ -335,6 +345,29 @@ function validMovesKing(a, b) {
 	return movesKing
 }
 
+function moveIllegal(source, target){
+	let currentFen = editorGame.fen()
+	var custommove = editorGame.get(source);
+	editorGame.load(currentFen)
+	editorGame.put({ type: custommove.type, color: custommove.color }, target)
+	editorGame.remove(target)
+	let isCheck = null
+	let eg = editorGame.fen()
+	if (editorGame.turn() === 'w') {
+		let myArray = eg.split(" ");
+		myArray[1] = "b";
+		isCheck = myArray.join(" ");
+	}
+	if (editorGame.turn() === 'b') {
+		let myArray = eg.split(" ");
+		myArray[1] = "w";
+		isCheck = myArray.join(" ");
+	}
+	console.log("Load Check")
+	editorGame.load(isCheck)
+	editorBoard.position(isCheck, false);
+}
+
 function onDropEditor(source, target) {
 	// see if the move is legal
 	var move = editorGame.move({
@@ -347,9 +380,49 @@ function onDropEditor(source, target) {
 	document.getElementById('trn').innerHTML = editorGame.turn();
 	var custommove = editorGame.get(source);
 
+
+	let currentFen = editorGame.fen()
+
+
+	if(editorGame.in_checkmate()){
+		let ksource = getKing(editorGame.turn())
+		let moveKing = kingMoves(ksource);
+		if (moveKing <= 1) {
+			console.log("Check Mate")
+			if (editorTurnt === 1) {
+				alert('You won the game!!')
+				editorGame.load(currentFen);
+				return
+			} else {
+				alert('You lost!!')
+				editorGame.load(currentFen);
+				return
+			}
+		}
+	}
+
+
+	let fun = 0;
+	let validMovesOfPieces = editorGame.moves({verbose:true, legal:false})
+	for(let i = 0; i < validMovesOfPieces.length; i++){
+		console.log("FUNN")
+		if(validMovesOfPieces[i].from === source && validMovesOfPieces[i].to === target){
+			console.log(validMovesOfPieces[i].from)
+			fun = 1;
+			break;
+		}
+	}
+
+	var targetmove = editorGame.get(target);	
+	if(isCheckAfterRemovePiece(currentFen, targetmove) || fun != 1){
+		return;
+	}
+	else{
+		moveIllegal(source, target);
+	}
+
 	myAudioEl.play();
 	// illegal move
-	let currentFen = editorGame.fen()
 	if (move === null) {
 		console.log("Here")
 		if (editorGame.in_checkmate() || editorGame.in_check() || custommove.type == 'k') {
@@ -362,14 +435,17 @@ function onDropEditor(source, target) {
 					if (targetmove == null) {
 						console.log("Target Move Null")
 						return 'snapback'
-					}
-					else if (custommove.color != targetmove.color && custommove.type == 'k' && custommove.color == editorGame.turn()) {
+					} else if (custommove.color != targetmove.color && custommove.type == 'k' && custommove.color == editorGame.turn()) {
 						console.log('Return')
 						editorGame.load(currentFen)
-						editorGame.put({ type: custommove.type, color: custommove.color }, target)
+						editorGame.put({
+							type: custommove.type,
+							color: custommove.color
+						}, target)
 						editorGame.remove(target)
 						if (editorGame.in_check()) {
-							let moveKing = calc(source);
+							let ksource = getKing(editorGame.turn())
+							let moveKing = kingMoves(ksource);
 							if (moveKing <= 1) {
 								console.log("Check Mate")
 								if (editorTurnt === 1) {
@@ -402,18 +478,15 @@ function onDropEditor(source, target) {
 						editorGame.load(isCheck)
 						editorBoard.position(isCheck, false);
 					}
-				}
-				else {
+				} else {
 					console.log('Snap');
 					return;
 				}
-			}
-			else {
+			} else {
 				console.log('Snap 1');
 				return
 			}
-		}
-		else {
+		} else {
 			console.log('Snap 2');
 			return
 		}
@@ -421,10 +494,12 @@ function onDropEditor(source, target) {
 	}
 
 
+
 	if (move != null && 'captured' in move && move.piece != 'p') {
-		if (!checkMoveBackLeadstoCheck(editorGame.fen(), move))
-			$("#dialog-4").data('move', move).dialog("open");
+		$("#dialog-4").data('move', move).dialog("open");
 	}
+
+
 
 
 	editorGame.undo(); //move is ok, now we can go ahead and check for promotion
@@ -498,46 +573,6 @@ function onDropEditor(source, target) {
 		// window.setTimeout(makeRandomMoveEditor, 250)
 	}
 
-}
-
-function checkMoveBackLeadstoCheck(currFen, move) {
-	let tG = new Chess()
-
-	tG.load(currFen)
-	tG.put({
-		type: move.piece,
-		color: move.color
-	}, move.from)
-	tG.remove(move.to)
-	if (!tG.fen().includes("k")) {
-		tG.put({
-			type: 'k',
-			color: 'b'
-		}, move.from)
-	}
-	if (!tG.fen().includes("K")) {
-
-		tG.put({
-			type: 'k',
-			color: 'w'
-		}, move.from)
-	}
-	let isCheck = null
-	let eg = tG.fen()
-	if (tG.turn() === 'w') {
-		let myArray = eg.split(" ");
-		myArray[1] = "b";
-		isCheck = myArray.join(" ");
-	}
-	if (tG.turn() === 'b') {
-		let myArray = eg.split(" ");
-		myArray[1] = "w";
-		isCheck = myArray.join(" ");
-	}
-
-	console.log("Is valid fen", tG.load(isCheck))
-
-	return tG.in_check()
 }
 
 function makeRandomMoveEditor() {
