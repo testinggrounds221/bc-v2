@@ -215,6 +215,17 @@ function getKing(color) {
 
 function onDragStartEditor(source, piece, position, orientation) {
 	// CHECK AT END OF ONDROPEDITOR
+	
+	if (editorGame.in_check() && isBoomCheckMate(editorGame.fen())) {
+		if (editorGame.turn() === 'w')
+		console.log('Black Wins')
+			alert('Black Wins')
+		if (editorGame.turn() === 'b')
+		console.log('White Wins')
+			alert('White Wins')
+		return
+	}
+
 	// do not pick up pieces if the editorGame is over
 
 	// if (editorGame.game_over()) {
@@ -539,7 +550,7 @@ function isBoomCheckMate(fen) {
 	let c = new Chess()
 	c.load(fen)
 
-	alterClr = null
+	let alterClr = ''
 	if (c.turn() === 'w') alterClr = 'b'
 	else alterClr = 'w'
 
@@ -558,7 +569,7 @@ function isBoomCheckMate(fen) {
 			f++;
 		}
 	}
-	return (!f > 0) 
+	return (!f > 0)
 }
 
 
