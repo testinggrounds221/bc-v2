@@ -268,10 +268,13 @@ function moveIllegal(source, target) {
 	console.log(source, target)
 	var custommove = editorGame.get(source);
 	editorGame.load(currentFen)
-	editorGame.put({ type: custommove.type, color: custommove.color }, target)
+	console.log(editorGame.put({ type: custommove.type, color: custommove.color }, target))
 	editorGame.remove(target)
 	let isCheck = null
 	let eg = editorGame.fen()
+	console.log(editorGame.fen())
+	console.log(editorGame.in_check())
+
 	if (editorGame.turn() === 'w') {
 		let myArray = eg.split(" ");
 		myArray[1] = "b";
@@ -285,6 +288,7 @@ function moveIllegal(source, target) {
 	console.log("Load Check")
 	editorGame.load(isCheck)
 	console.log(editorGame.in_check())
+	console.log(editorGame.fen())
 	editorBoard.position(isCheck, false);
 
 	changeSquareColorAfterMove(source, target)
@@ -313,8 +317,10 @@ function onDropEditor(source, target) {
 	myAudioEl.play();
 	// illegal move
 	if (move === null) {
-		console.log("Here")
-		if (!isCheckAfterRemovePiece(currentFen, target) && fun === 1) {
+		console.log("Move is null")
+		if (!isCheckForTurnAftermove(editorGame.fen(), source, target)
+			&& !isCheckAfterRemovePiece(currentFen, target)
+			&& fun === 1) {
 			moveIllegal(source, target);
 		}
 		if (editorGame.in_checkmate() || editorGame.in_check()) {
@@ -390,7 +396,7 @@ function onDropEditor(source, target) {
 		editorTurnt = 1 - editorTurnt;
 		// make random legal move for black
 		// window.setTimeout(makeRandomMoveEditor, 250)
-		if (editorGame.in_check() && isBoomCheckMate(editorGame.fen())) {
+		if (editorGame.in_checkmate() && isBoomCheckMate(editorGame.fen())) {
 			if (editorGame.turn() === 'w')
 				alert('Black Wins')
 			if (editorGame.turn() === 'b')
@@ -466,12 +472,10 @@ function changeSquareColorAfterMove(source, target) {
 	boardJqry.find('.square-' + target).addClass('highlight-to')
 }
 
-function isBoomCheckMate(fen) {
+function kingHasPossibleMoves(fen) {
 	let c = new Chess()
 	c.load(fen)
-	let alterClr = ''
-	if (c.turn() === 'w') alterClr = 'b'
-	else alterClr = 'w'
+
 	// console.log(c.moves({ verbose: true, legal: false }))
 	let f = 0
 	let mvs = c.moves({ verbose: true, legal: false })
@@ -485,6 +489,58 @@ function isBoomCheckMate(fen) {
 		}
 	}
 	return (!f > 0)
+}
+
+function isBoomCheckMate(fen) {
+	let c = new Chess()
+	c.load(fen)
+
+	// console.log(c.moves({ verbose: true, legal: false }))
+	let f = 0
+	let mvs = c.moves({ verbose: true, legal: false })
+	for (let i = 0; i < mvs.length; i++) {
+		const mv = mvs[i];
+		console.log(mv.flags)
+
+		if (mv.flags === 'c' && !isCheckAfterRemovePiece(fen, mv.to)) {
+			console.log(mv) // ! DO NOT DLT. Keep This Console Log for moves
+			f++;
+		}
+	}
+	return (!f > 0)
+}
+
+function isCheckForAlterTurnAftermove(fen, source, target) {
+	let isCheckGame = new Chess()
+	console.log(fen, source, target)
+	let myArray = fen.split(" ");
+	if (myArray[1] == "b")
+		myArray[1] = "w";
+	else
+		myArray[1] = "b";
+	fen = myArray.join(" ");
+	isCheckGame.load(fen)
+	let sourcePiece = isCheckGame.get(source)
+	isCheckGame.load(fen)
+	isCheckGame.remove(source)
+	isCheckGame.put({
+		type: sourcePiece.type,
+		color: sourcePiece.color
+	}, target)
+	return isCheckGame.in_check()
+}
+
+function isCheckForTurnAftermove(fen, source, target) {
+	let isCheckGame = new Chess()
+	console.log(fen, source, target)
+	isCheckGame.load(fen)
+	let sourcePiece = isCheckGame.get(source)
+	isCheckGame.remove(source)
+	isCheckGame.put({
+		type: sourcePiece.type,
+		color: sourcePiece.color
+	}, target)
+	return isCheckGame.in_check()
 }
 
 window.bd = boardJqry
