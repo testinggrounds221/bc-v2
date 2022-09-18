@@ -16,6 +16,8 @@ promoting = false;
 piece_theme = "img/chesspieces/wikipedia/{piece}.png";
 var squareToHighlight = null
 var squareClass = 'square-55d63'
+
+let waitForBoom = false
 $(function () {
 	$("#dialog-4").dialog({
 		autoOpen: false,
@@ -24,9 +26,12 @@ $(function () {
 			Yes: function () {
 				moveBack($(this).data('move'))
 				$(this).dialog("close");
+				waitForBoom = false
 			},
 			No: function () {
 				$(this).dialog("close");
+				waitForBoom = false
+				alertCheckMate()
 			},
 		},
 	});
@@ -138,6 +143,7 @@ function onDropEditor(source, target) {
 		promotion: 'q' // NOTE: always promote to a queen for example simplicity
 	})
 
+
 	document.getElementById('trn').style.display = null;
 	document.getElementById('trn').innerHTML = editorGame.turn();
 	let currentFen = editorGame.fen()
@@ -154,8 +160,7 @@ function onDropEditor(source, target) {
 	// illegal move
 	if (move === null) {
 		console.log("Move is null")
-		if (!isCheckForTurnAftermove(editorGame.fen(), source, target)
-			&& !isCheckAfterRemovePiece(currentFen, target)
+		if (!isCheckAfterRemovePiece(currentFen, target)
 			&& fun === 1) {
 			moveIllegal(source, target);
 		}
@@ -176,7 +181,7 @@ function onDropEditor(source, target) {
 		changeSquareColorAfterMove(source, target)
 	}
 	if (move != null && 'captured' in move && move.piece != 'p') {
-
+		waitForBoom = true
 		$("#dialog-4").data('move', move).dialog("open");
 	}
 	editorGame.undo(); //move is ok, now we can go ahead and check for promotion
@@ -232,13 +237,18 @@ function onDropEditor(source, target) {
 		editorTurnt = 1 - editorTurnt;
 		// make random legal move for black
 		// window.setTimeout(makeRandomMoveEditor, 250)
-		if (editorGame.in_checkmate() && isBoomCheckMate(editorGame.fen())) {
-			if (editorGame.turn() === 'w')
-				alert('Black Wins')
-			if (editorGame.turn() === 'b')
-				alert('White Wins')
-			return
-		}
+
+	}
+	if (!waitForBoom) alertCheckMate()
+}
+
+function alertCheckMate() {
+	if (editorGame.in_checkmate() && isBoomCheckMate(editorGame.fen())) {
+		if (editorGame.turn() === 'w')
+			alert('Black Wins')
+		if (editorGame.turn() === 'b')
+			alert('White Wins')
+		return
 	}
 }
 
@@ -318,10 +328,13 @@ function moveBack(move) {
 		}
 	}
 	editorTurnt = 1 - editorTurnt;
+	alertCheckMate()
+	waitForBoom = false
 	return {
 		s: 1,
 		m: "Moved Back"
 	}
+
 }
 
 function moveIllegal(source, target) {
