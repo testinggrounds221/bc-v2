@@ -160,13 +160,13 @@ function onDropEditor(source, target) {
 	// illegal move
 	if (move === null) {
 		console.log("Move is null")
-		if (!isCheckAfterRemovePiece(currentFen, target)
+		if (editorGame.get(target) && !isCheckAfterRemovePiece(currentFen, target)
 			&& fun === 1) {
 			moveIllegal(source, target);
 		}
 		if (editorGame.in_checkmate() || editorGame.in_check()) {
 			console.log('Check Mate')
-			if (!isCheckAfterRemovePiece(currentFen, target) && fun === 1) {
+			if (editorGame.get(target) && !isCheckAfterRemovePiece(currentFen, target) && fun === 1) {
 				moveIllegal(source, target);
 			} else {
 				return
@@ -338,6 +338,7 @@ function moveBack(move) {
 }
 
 function moveIllegal(source, target) {
+	if (!editorGame.get(target)) return
 	let currentFen = editorGame.fen()
 	console.log(source, target)
 	var custommove = editorGame.get(source);
